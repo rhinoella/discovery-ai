@@ -23,7 +23,7 @@ export const Upload = ({ handleFilesUploaded }) => {
         
         setTimeout(() => {
             handleFilesUploaded(fileRefs);
-        }, 5000)
+        }, fileRefs.length*1000)
     };
 
     return (<div className="flex-col max-w-[500px] mx-auto pt-20">

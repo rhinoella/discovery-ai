@@ -20,13 +20,13 @@ from openai import OpenAI
 from flask_cors import CORS
 
 
-client = create_client("https://htbkghbygiyuncrzxkhq.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh0YmtnaGJ5Z2l5dW5jcnp4a2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTkxMzYxNzIsImV4cCI6MjAzNDcxMjE3Mn0.2mEHWNDnAVEYEUUEE3fYKs-tDnG_zPEYK0tXIEXGdgE")
-openAIEmbeddings = OpenAIEmbeddings(api_key="sk-proj-wXWyFDP12pM9TwvHnIpIT3BlbkFJoN4rdBGcX0tUBlIaHBrm")
-llm = ChatOpenAI(model="gpt-4o", api_key="sk-proj-wXWyFDP12pM9TwvHnIpIT3BlbkFJoN4rdBGcX0tUBlIaHBrm")
+client = create_client("https://htbkghbygiyuncrzxkhq.supabase.co", "..")
+openAIEmbeddings = OpenAIEmbeddings(api_key="")
+llm = ChatOpenAI(model="gpt-4o", api_key="")
 vectorStore = SupabaseVectorStore(client, openAIEmbeddings, "documents")
-cred = credentials.Certificate("discovery-ai-8a80a-firebase-adminsdk-31es3-9964f34fd1.json")
-firebase_admin.initialize_app(cred, {"storageBucket": "discovery-ai-8a80a.appspot.com"})
-openAIClient = OpenAI(api_key="sk-proj-wXWyFDP12pM9TwvHnIpIT3BlbkFJoN4rdBGcX0tUBlIaHBrm")
+cred = credentials.Certificate("")
+firebase_admin.initialize_app(cred, {"storageBucket": ""})
+openAIClient = OpenAI(api_key="")
 
 db = firestore.client()
 
@@ -120,7 +120,7 @@ def discovery(data):
 
         for one in data:
             allEvidenceText += allData.get(one)
-        completion = openAIClient.chat.completions.create(model="gpt-4o", messages=[{"role": "system", "content": "You are an amazing detective that is great at piecing together several evidences to create exhibits. Given this exhibit you generated, give me a summary of it and why it is relevant to the case."}, {"role": "user", "content": [
+        completion = openAIClient.chat.completions.create(model="gpt-4o", messages=[{"role": "system", "content": "You are an amazing detective that is great at piecing together several evidences to create exhibits. Given this exhibit you generated, give me a 2 sentence summary of it and why it is relevant to the case."}, {"role": "user", "content": [
             {"type": "text", "text": "Here is all the evidences from this exhibit: " + allEvidenceText}
     ],
 }])
@@ -244,7 +244,7 @@ def askGPT(question):
     messageHistory = [
     (
         "system",
-        "You are a legal professional and a lawyer that is fully versed in the language of law. Please summarize and explain this document to provide a deep understanding with a 3 bullet analysis.",
+        "You are a legal professional and a lawyer that is fully versed in the language of law. Please summarize and explain this document to provide a deep understanding with 3 sentences.",
     ),
     ("human", question),
     ]

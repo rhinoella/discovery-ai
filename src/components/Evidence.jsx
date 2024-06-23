@@ -9,28 +9,25 @@ import { useEffect, useState } from "react";
 export const Evidence = ({
     name,
     description,
-    storageLink
+    type
 }) => {
     const [icon, setIcon] = useState(file);
-    const storage = getStorage();
-    const objectRef = ref(storage, storageLink);
 
-    getMetadata(objectRef).then((metadata) => {
-            console.log(metadata)
-            if (metadata.contentType === "image/png") {
-                setIcon(image);
-            }
-            else if (metadata.contentType === "application/pdf")
-            {
-                setIcon(file);
-            }
-            else if (metadata.contentType === "audio/mpeg3") {
-                setIcon(audio);
-            }
-            else if (metadata.contentType === "video/mp4") {
-                setIcon(video);
-            }
-        });
+    useEffect(() => {              
+        if (type === "image") {
+            setIcon(image);
+        }
+        else if (type === "pdf")
+        {
+            setIcon(file);
+        }
+        else if (type === "audio") {
+            setIcon(audio);
+        }
+        else if (type === "video") {
+            setIcon(video);
+        }
+    }, []);
 
     return(<div className="bg-slate-100 p-8 rounded-lg w-80 flex flex-row gap-8">
         <div className="my-auto">
@@ -38,7 +35,7 @@ export const Evidence = ({
         </div>
         <div>
         <h3 className="font-medium text-slate-700">{name}</h3>
-        <a>{storageLink}</a>
+        <p>{type}</p>
         <p>{description}</p>
         </div>
     </div>)

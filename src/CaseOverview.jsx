@@ -1,4 +1,4 @@
-import { collection, getDocs, getFirestore, query } from "@firebase/firestore";
+import { collection, doc, getDoc, getDocs, getFirestore, query } from "@firebase/firestore";
 import { Chat } from "./components/Chat";
 import { Exhibit } from "./components/Exhibit";
 import { useEffect, useState } from "react";
@@ -52,26 +52,29 @@ export const CaseOverview = ({app}) => {
             const snapshot = await getDocs(q);
             
             let parsedExhibits = [];
-            snapshot.forEach((snap) => {       
+            snapshot.forEach(async (snap) => {       
                 const data = snap.data();
+                const evidences = data.data;
+
                 const exhibit = {
                     name: snap.id,
-                    summary: data.summary,
-                    evidences: data.data
+                    description: data.summary,
+                    evidences: evidences
                 }
     
                 parsedExhibits.push(exhibit)
-            })
+            });
 
-            setExhibits(parsedExhibits)
+            console.log(parsedExhibits)
+
+            const exhibitList = parsedExhibits.map((exhibit, id) => {
+                return <Exhibit key={id} name={exhibit.name} description={exhibit.description} evidences={exhibit.evidences} app={app}/>
+            });
+            setExhibits(exhibitList);
         }
 
         getDocData();
-    });
-
-    const exhibitMap = exhibits.map((exhibit, id) => {
-        return <Exhibit key={id} exhibit={exhibit} app={app}/>
-    });
+    }, []);
 
     return (
         <div className="mx-10 mt-16 flex flex-col gap-10">
@@ -94,7 +97,7 @@ export const CaseOverview = ({app}) => {
             <div>
             <div className="border-b mb-10"><h2 className="text-slate-800 font-medium pb-2 text-xl">Evidence Overview</h2></div>
             <div className="flex flex-col gap-10">
-            {exhibitMap}
+            {exhibits}
             </div>
             </div>
         </div>
