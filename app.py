@@ -1,5 +1,5 @@
 import os
-from flask import Flask
+from flask import Flask, Response, request, jsonify
 from supabase import create_client, Client
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import SupabaseVectorStore
@@ -18,6 +18,7 @@ import cv2
 import base64
 from openai import OpenAI
 
+
 client = create_client("https://htbkghbygiyuncrzxkhq.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh0YmtnaGJ5Z2l5dW5jcnp4a2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTkxMzYxNzIsImV4cCI6MjAzNDcxMjE3Mn0.2mEHWNDnAVEYEUUEE3fYKs-tDnG_zPEYK0tXIEXGdgE")
 openAIEmbeddings = OpenAIEmbeddings(api_key="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")
 llm = ChatOpenAI(model="gpt-4o", api_key="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")
@@ -32,22 +33,39 @@ db = firestore.client()
 bucket = storage.bucket()
 app = Flask(__name__)
 
-@app.route("/")
-def hello_world():
-    return "<p>Hello, World!</p>"
+@app.route("/discovery")
+def discovery():
+    if request.is_json:
+        data = request.get_json()
+        array = data.get('data', [])
+    else:
+        array = request.form.getlist('array')
+    
+    # Do something with the array
+    print(array)
+    discovery(array)
+    
+    return jsonify({"status": "success"})
 
 
 def discovery(data):
     for oneData in data:
         if (".png" in oneData):
             text = understandImage(oneData)
+            db.collection("case").document(oneData).set({"type": "image", "analysis": analysis})
+
         elif (".mp3" in oneData):
             transcription, analysis = understandAudio(oneData)
+            db.collection("case").document(oneData).set({"type": "audio", "transcription": transcription, "analysis": analysis})
+
         elif (".mp4" in oneData):
             text = understandVideo(oneData)
+            db.collection("case").document(oneData).set({"type": "video", "analysis": text})
+
         elif (".pdf" in oneData):
             text, analysis = understandPDF(oneData)
-        db.collection("case").document(oneData).se
+            db.collection("case").document(oneData).set({"type": "pdf", "transcription": transcription, "raw_text": text, "analysis": analysis})
+
 def understandAudio(uri):
       
     tempFileURI = tempfile.NamedTemporaryFile(suffix=".mp3", delete=False)
