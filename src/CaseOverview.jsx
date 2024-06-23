@@ -1,16 +1,47 @@
-import { Evidence } from "./components/Evidence";
+import { Chat } from "./components/Chat";
+import { Exhibit } from "./components/Exhibit";
 
-const evidenceExamples = [
+const exhibits = [{
+    name : "Exhibit A",
+    description: "Evidence that shows x",
+    evidences : [{
+        name: "NameExample",
+        description: "Description",
+        storageLink: "test/iconmonstr-arrow-up-circle-thin-240.png"
+    },
     {
         name: "NameExample",
         description: "Description",
         storageLink: "test/iconmonstr-arrow-up-circle-thin-240.png"
-    }
-]
+    },
+    {
+        name: "NameExample",
+        description: "Description",
+        storageLink: "test/iconmonstr-arrow-up-circle-thin-240.png"
+    }],
+},
+{
+    name : "Exhibit B",
+    evidences : [{
+        name: "NameExample",
+        description: "Description",
+        storageLink: "test/iconmonstr-arrow-up-circle-thin-240.png"
+    },
+    {
+        name: "NameExample",
+        description: "Description",
+        storageLink: "test/iconmonstr-arrow-up-circle-thin-240.png"
+    },
+    {
+        name: "NameExample",
+        description: "Description",
+        storageLink: "test/iconmonstr-arrow-up-circle-thin-240.png"
+    }],
+}]
 
 export const CaseOverview = () => {
-    const evidences = evidenceExamples.map((ev, id) => {
-        return <Evidence key={id} name={ev.name} description={ev.description} storageLink={ev.storageLink} />
+    const exhibitMap = exhibits.map((exhibit, id) => {
+        return <Exhibit key={id} exhibit={exhibit}/>
     });
 
     return (
@@ -30,10 +61,11 @@ export const CaseOverview = () => {
                     <p>20 hrs</p>
                 </div>
             </div>
+            <Chat />
             <div>
-            <div><h2 className="text-slate-800 font-medium pb-2">Evidence Overview</h2></div>
-            <div className="p-12 border rounded-lg">
-                {evidences}
+            <div className="border-b mb-10"><h2 className="text-slate-800 font-medium pb-2 text-xl">Evidence Overview</h2></div>
+            <div className="flex flex-col gap-10">
+            {exhibitMap}
             </div>
             </div>
         </div>

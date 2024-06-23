@@ -34,10 +34,10 @@ function App() {
   const pages = [<Upload handleFilesUploaded={handleFilesUploaded}/>, <CaseOverview />];
 
   return (
-      <>
+      <div className='mt-32'>
        <Header/>
        { pages[page] }
-      </>
+      </div>
     )
   }
 

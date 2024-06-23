@@ -18,8 +18,7 @@ export const Upload = ({ handleFilesUploaded }) => {
             uploadBytes(fileRef, file).then((snapshot) => {
                 console.log(snapshot);
               });
-            console.log(fileRef);
-            fileRefs.push(fileRef);
+            fileRefs.push(fileRef.fullPath);
         }
 
         handleFilesUploaded(fileRefs);
