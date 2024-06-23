@@ -33,13 +33,24 @@ db = firestore.client()
 bucket = storage.bucket()
 app = Flask(__name__)
 
-@app.route("/discovery")
-def discovery():
+@app.route("/chat", methods=["POST"])
+def chat():
+    if request.is_json:
+        data = request.get_json()
+        message = data.get('message', [])
+    else:
+        message = request.form.get("message")
+
+    
+
+
+@app.route("/discovery", methods=["POST"])
+def discover():
     if request.is_json:
         data = request.get_json()
         array = data.get('data', [])
     else:
-        array = request.form.getlist('array')
+        array = request.form.getlist('data')
     
     # Do something with the array
     print(array)
@@ -49,22 +60,42 @@ def discovery():
 
 
 def discovery(data):
+    allData = []
     for oneData in data:
         if (".png" in oneData):
             text = understandImage(oneData)
-            db.collection("case").document(oneData).set({"type": "image", "analysis": analysis})
+            db.collection("case").document(oneData).set({"type": "image", "analysis": text})
+            allData.append({oneData: "Evidence Analysis: " + text})
 
         elif (".mp3" in oneData):
             transcription, analysis = understandAudio(oneData)
             db.collection("case").document(oneData).set({"type": "audio", "transcription": transcription, "analysis": analysis})
+            allData.append({oneData: "Evidence Transcription: " + transcription + ", Analysis: " + analysis})
 
         elif (".mp4" in oneData):
             text = understandVideo(oneData)
             db.collection("case").document(oneData).set({"type": "video", "analysis": text})
+            allData.append({oneData: "Evidence Analysis: " + text})
+
 
         elif (".pdf" in oneData):
             text, analysis = understandPDF(oneData)
-            db.collection("case").document(oneData).set({"type": "pdf", "transcription": transcription, "raw_text": text, "analysis": analysis})
+            db.collection("case").document(oneData).set({"type": "pdf", "transcription": text, "analysis": analysis})
+            allData.append({oneData: "Evidence Transcription: " + text})
+    
+    
+    completion = openAIClient.chat.completions.create(model="gpt-4o", messages=[{"role": "system", "content": "You are an amazing detective that is great at piecing together several evidences to create exhibits. Format the exhibits you create from the evidence provided like this, X is given the filename: X.pdf,X.mp3;X.mp4;X.pdf,X.pdf"}, {"role": "user", "content": [
+        {"type": "text", "text": "Format the exhibits you create from the evidence provided like this, X is given the filename: X.pdf,X.mp3;X.mp4;X.pdf,X.pdf"}, {"type": "text", "text": "Here is all the evidences: " + allData}
+     ],
+    }])
+
+    allExhibits = (completion.choices[0].message.content)
+    allExhibits = allExhibits.split(";")
+    alphabet = "abcdefghijklmnopqrstuvwxyz"
+    for oneExhibit in range(len(allExhibits)):
+        db.collection("exhibits").document(alphabet[oneExhibit].upper()).set({"data": allExhibits[oneExhibit].split(",")})
+
+
 
 def understandAudio(uri):
       
@@ -180,3 +211,6 @@ def askGPT(question):
     return llm.invoke(messageHistory).content
     
 
+
+
+app.run(host="localhost")
