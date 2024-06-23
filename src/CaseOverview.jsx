@@ -70,7 +70,7 @@ export const CaseOverview = ({app}) => {
     });
 
     const exhibitMap = exhibits.map((exhibit, id) => {
-        return <Exhibit key={id} exhibit={exhibit}/>
+        return <Exhibit key={id} exhibit={exhibit} app={app}/>
     });
 
     return (

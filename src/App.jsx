@@ -10,13 +10,13 @@ function App() {
   const [page, setPage] = useState(1);
 
   const firebaseConfig = {
-    apiKey: import.meta.env.VITE_API_KEY,
-    authDomain: import.meta.env.VITE_AUTH_DOMAIN,
-    projectId: import.meta.env.VITE_PROJECT_ID,
-    storageBucket: import.meta.env.VITE_STORAGE_BUCKET,
-    messagingSenderId: import.meta.env.VITE_MESSAGING_SENDER_ID,
-    appId: import.meta.env.VITE_APP_ID,
-    measurementId: import.meta.env.VITE_MEASUREMENT_ID
+    apiKey: "AIzaSyArwh6KL3piK85hOWkT7RvYK4iSkUAl8K8",
+    authDomain: "discovery-ai-8a80a.firebaseapp.com",
+    projectId: "discovery-ai-8a80a",
+    storageBucket: "discovery-ai-8a80a.appspot.com",
+    messagingSenderId: 650258991035,
+    appId: "1:650258991035:web:24f32a3404d7016573669e",
+    measurementId: "G-SK408QB8Y2"
   };
 
   // Initialize Firebase
@@ -41,7 +41,7 @@ function App() {
     setPage(1);
   }
 
-  const pages = [<Upload handleFilesUploaded={handleFilesUploaded}/>, <CaseOverview />];
+  const pages = [<Upload handleFilesUploaded={handleFilesUploaded}/>, <CaseOverview app={app} />];
 
   return (
       <div className='mt-32'>
