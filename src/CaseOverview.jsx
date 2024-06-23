@@ -1,5 +1,7 @@
+import { collection, getDocs, getFirestore, query } from "@firebase/firestore";
 import { Chat } from "./components/Chat";
 import { Exhibit } from "./components/Exhibit";
+import { useEffect, useState } from "react";
 
 const exhibits = [{
     name : "Exhibit A",
@@ -39,7 +41,34 @@ const exhibits = [{
     }],
 }]
 
-export const CaseOverview = () => {
+export const CaseOverview = ({app}) => {
+    const [exhibits, setExhibits] = useState([]);
+
+    const db = getFirestore(app);
+
+    useEffect(() => {
+        const getDocData = async () => {
+            const q = query(collection(db, "exhibits"));
+            const snapshot = await getDocs(q);
+            
+            let parsedExhibits = [];
+            snapshot.forEach((snap) => {       
+                const data = snap.data();
+                const exhibit = {
+                    name: snap.id,
+                    summary: data.summary,
+                    evidences: data.data
+                }
+    
+                parsedExhibits.push(exhibit)
+            })
+
+            setExhibits(parsedExhibits)
+        }
+
+        getDocData();
+    });
+
     const exhibitMap = exhibits.map((exhibit, id) => {
         return <Exhibit key={id} exhibit={exhibit}/>
     });
