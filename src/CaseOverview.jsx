@@ -1,42 +1,76 @@
-import { Evidence } from "./components/Evidence";
-import {useState, useEffect} from "react";
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-import { getFirestore } from "firebase/firestore";
+import { collection, getDocs, getFirestore, query } from "@firebase/firestore";
+import { Chat } from "./components/Chat";
+import { Exhibit } from "./components/Exhibit";
+import { useEffect, useState } from "react";
 
-
-const evidenceExamples = [
+const exhibits = [{
+    name : "Exhibit A",
+    description: "Evidence that shows x",
+    evidences : [{
+        name: "NameExample",
+        description: "Description",
+        storageLink: "test/iconmonstr-arrow-up-circle-thin-240.png"
+    },
     {
         name: "NameExample",
         description: "Description",
         storageLink: "test/iconmonstr-arrow-up-circle-thin-240.png"
-    }
-]
+    },
+    {
+        name: "NameExample",
+        description: "Description",
+        storageLink: "test/iconmonstr-arrow-up-circle-thin-240.png"
+    }],
+},
+{
+    name : "Exhibit B",
+    evidences : [{
+        name: "NameExample",
+        description: "Description",
+        storageLink: "test/iconmonstr-arrow-up-circle-thin-240.png"
+    },
+    {
+        name: "NameExample",
+        description: "Description",
+        storageLink: "test/iconmonstr-arrow-up-circle-thin-240.png"
+    },
+    {
+        name: "NameExample",
+        description: "Description",
+        storageLink: "test/iconmonstr-arrow-up-circle-thin-240.png"
+    }],
+}]
 
-const firebaseConfig = {
-    apiKey: import.meta.env.VITE_API_KEY,
-    authDomain: import.meta.env.VITE_AUTH_DOMAIN,
-    projectId: import.meta.env.VITE_PROJECT_ID,
-    storageBucket: import.meta.env.VITE_STORAGE_BUCKET,
-    messagingSenderId: import.meta.env.VITE_MESSAGING_SENDER_ID,
-    appId: import.meta.env.VITE_APP_ID,
-    measurementId: import.meta.env.VITE_MEASUREMENT_ID
-  };
+export const CaseOverview = ({app}) => {
+    const [exhibits, setExhibits] = useState([]);
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-export const CaseOverview = () => {
-    const [evidenceFiles, setEvidenceFiles] = useState([]);
+    const db = getFirestore(app);
 
     useEffect(() => {
+        const getDocData = async () => {
+            const q = query(collection(db, "exhibits"));
+            const snapshot = await getDocs(q);
+            
+            let parsedExhibits = [];
+            snapshot.forEach((snap) => {       
+                const data = snap.data();
+                const exhibit = {
+                    name: snap.id,
+                    summary: data.summary,
+                    evidences: data.data
+                }
+    
+                parsedExhibits.push(exhibit)
+            })
 
+            setExhibits(parsedExhibits)
+        }
 
+        getDocData();
+    });
 
-    }, [setEvidenceFiles]);
-
-    const evidences = evidenceExamples.map((ev, id) => {
-        return <Evidence key={id} name={ev.name} description={ev.description} storageLink={ev.storageLink} />
+    const exhibitMap = exhibits.map((exhibit, id) => {
+        return <Exhibit key={id} exhibit={exhibit}/>
     });
 
     return (
@@ -56,10 +90,11 @@ export const CaseOverview = () => {
                     <p>20 hrs</p>
                 </div>
             </div>
+            <Chat />
             <div>
-            <div><h2 className="text-slate-800 font-medium pb-2">Evidence Overview</h2></div>
-            <div className="p-12 border rounded-lg">
-                {evidences}
+            <div className="border-b mb-10"><h2 className="text-slate-800 font-medium pb-2 text-xl">Evidence Overview</h2></div>
+            <div className="flex flex-col gap-10">
+            {exhibitMap}
             </div>
             </div>
         </div>

@@ -26,19 +26,17 @@ function App() {
   const analytics = getAnalytics(app);
 
   const handleFilesUploaded = (fileRefs) => {
-
-    // Post to api
-    const rawResponse = fetch('http://127.0.0.1:5000/discovery', {
-    method: 'POST',
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({"data": fileRefs})
-  });
-  const content = rawResponse.json();
-
-  console.log(content);
+    const rawResponse = fetch('http://localhost:5000/discovery', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({"data": fileRefs})
+    });
+    const content = rawResponse.json();
+  
+    console.log(content);
     
     setPage(1);
   }
@@ -46,10 +44,10 @@ function App() {
   const pages = [<Upload handleFilesUploaded={handleFilesUploaded}/>, <CaseOverview />];
 
   return (
-      <>
+      <div className='mt-32'>
        <Header/>
        { pages[page] }
-      </>
+      </div>
     )
   }
 
