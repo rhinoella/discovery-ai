@@ -17,21 +17,23 @@ import pytesseract
 import cv2
 import base64
 from openai import OpenAI
+from flask_cors import CORS
 
 
 client = create_client("https://htbkghbygiyuncrzxkhq.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh0YmtnaGJ5Z2l5dW5jcnp4a2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTkxMzYxNzIsImV4cCI6MjAzNDcxMjE3Mn0.2mEHWNDnAVEYEUUEE3fYKs-tDnG_zPEYK0tXIEXGdgE")
-openAIEmbeddings = OpenAIEmbeddings(api_key="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")
-llm = ChatOpenAI(model="gpt-4o", api_key="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")
+openAIEmbeddings = OpenAIEmbeddings(api_key="sk-proj-wXWyFDP12pM9TwvHnIpIT3BlbkFJoN4rdBGcX0tUBlIaHBrm")
+llm = ChatOpenAI(model="gpt-4o", api_key="sk-proj-wXWyFDP12pM9TwvHnIpIT3BlbkFJoN4rdBGcX0tUBlIaHBrm")
 vectorStore = SupabaseVectorStore(client, openAIEmbeddings, "documents")
-cred = credentials.Certificate("discovery-ai-8a80a-firebase-adminsdk-31es3-437b4d795e.json")
+cred = credentials.Certificate("discovery-ai-8a80a-firebase-adminsdk-31es3-9964f34fd1.json")
 firebase_admin.initialize_app(cred, {"storageBucket": "discovery-ai-8a80a.appspot.com"})
-openAIClient = OpenAI(api_key="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")
+openAIClient = OpenAI(api_key="sk-proj-wXWyFDP12pM9TwvHnIpIT3BlbkFJoN4rdBGcX0tUBlIaHBrm")
 
 db = firestore.client()
 
 
 bucket = storage.bucket()
 app = Flask(__name__)
+CORS(app)
 
 @app.route("/chat", methods=["POST"])
 def chat():
@@ -54,6 +56,7 @@ def chat():
 
 @app.route("/discovery", methods=["POST"])
 def discover():
+
     if request.is_json:
         data = request.get_json()
         array = data.get('data', [])
@@ -68,45 +71,55 @@ def discover():
 
 
 def discovery(data):
-    allData = []
+    allData = {}
     for oneData in data:
         if (".png" in oneData):
             text, name = understandImage(oneData)
-            db.collection("case").document(oneData).set({"type": "image", "description": "Analysis: " + text, "name": name})
-            allData.append({oneData: "Evidence Analysis: " + text})
+            # oneData = oneData.split(".")[0]
+            print(oneData)
+            print(name)
+            db.collection("case").document(oneData).set({"type": "image", "description": ("Analysis: " + text), "name": name})
+            allData[oneData] = "Evidence Analysis: " + text
 
         elif (".mp3" in oneData):
             transcription, analysis, name = understandAudio(oneData)
-            db.collection("case").document(oneData).set({"type": "audio", "description": "Transcription: " + transcription + ", Analysis: " + analysis, "name": name})
-            allData.append({oneData: "Evidence Transcription: " + transcription + ", Analysis: " + analysis})
+            # oneData = oneData.split(".")[0]
+            db.collection("case").document(oneData).set({"type": "audio", "description": ("Transcription: " + transcription + ", Analysis: " + analysis), "name": name})
+            allData[oneData] =  "Evidence Transcription: " + transcription + ", Analysis: " + analysis
 
         elif (".mp4" in oneData):
             text, name = understandVideo(oneData)
-            db.collection("case").document(oneData).set({"type": "video", "description": "Analysis: " + text, "name": name})
-            allData.append({oneData: "Evidence Analysis: " + text})
+            # oneData = oneData.split(".")[0]
+            db.collection("case").document(oneData).set({"type": "video", "description": ("Analysis: " + text), "name": name})
+            allData[oneData] = "Evidence Analysis: " + text
 
 
         elif (".pdf" in oneData):
             text, analysis, name = understandPDF(oneData)
-            db.collection("case").document(oneData).set({"type": "pdf", "description": "Transcription: " + text + ", Analysis: " + analysis, "name": name})
-            allData.append({oneData: "Evidence Transcription: " + text})
+            # oneData = oneData.split(".")[0]
+            db.collection("case").document(oneData).set({"type": "pdf", "description": ("Transcription: " + text + ", Analysis: " + analysis), "name": name})
+            allData[oneData] = "Evidence Transcription: " + text
     
     
     completion = openAIClient.chat.completions.create(model="gpt-4o", messages=[{"role": "system", "content": "You are an amazing detective that is great at piecing together several evidences to create exhibits. Format the exhibits you create from the evidence provided like this, X is given the filename: X.pdf,X.mp3;X.mp4;X.pdf,X.pdf"}, {"role": "user", "content": [
-        {"type": "text", "text": "Format the exhibits you create from the evidence provided like this, X is given the filename: X.pdf,X.mp3;X.mp4;X.pdf,X.pdf"}, {"type": "text", "text": "Here is all the evidences: " + allData}
+        {"type": "text", "text": "Given X,Y,Z are example file names of evidence. Only return to me text like this, where each filename is seperated by a comma and each exhbit is seperated by a semicolon X,Y;Z;Z,Y"}, {"type": "text", "text": "Here is all the evidences: " + str(allData)}
      ],
     }])
 
     allExhibits = (completion.choices[0].message.content)
+   
     allExhibits = allExhibits.split(";")
+
     alphabet = "abcdefghijklmnopqrstuvwxyz"
     for oneExhibit in range(len(allExhibits)):
         data = allExhibits[oneExhibit].split(",")
-
+        print("Exhibits: " + str(allExhibits))
+        print("Data: " + str(data))
+        print("All Data: " + str(allData))
         allEvidenceText = ""
 
         for one in data:
-            allEvidenceText += allData[one]
+            allEvidenceText += allData.get(one)
         completion = openAIClient.chat.completions.create(model="gpt-4o", messages=[{"role": "system", "content": "You are an amazing detective that is great at piecing together several evidences to create exhibits. Given this exhibit you generated, give me a summary of it and why it is relevant to the case."}, {"role": "user", "content": [
             {"type": "text", "text": "Here is all the evidences from this exhibit: " + allEvidenceText}
     ],
@@ -148,12 +161,12 @@ def understandPDF(uri):
     blobURI.download_to_filename(tempFileURI.name)
 
     extractedText = (extractTextWithOCR(tempFileURI.name))
-    gptAnalysis = (askGPT(extractedText))
+    gptAnalysis, gptName = (askGPT(extractedText))
     # Delete the temporary file
     os.remove(tempFileURI.name)
     print(f'Temporary file {tempFileURI.name} deleted.')
 
-    return extractedText, gptAnalysis
+    return extractedText, gptAnalysis, gptName
 
 def extractTextWithOCR(pdf_path):
     text = ""
@@ -248,4 +261,4 @@ def askGPT(question):
     name = llm.invoke(nameMessageHistory).content
     return explain, name
 
-app.run(host="localhost")
+app.run(debug=True)

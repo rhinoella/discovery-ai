@@ -26,7 +26,7 @@ function App() {
   const analytics = getAnalytics(app);
 
   const handleFilesUploaded = (fileRefs) => {
-    const rawResponse = fetch('http://localhost:5000/discovery', {
+    const rawResponse = fetch('http://127.0.0.1:5000/discovery', {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
@@ -34,9 +34,8 @@ function App() {
       },
       body: JSON.stringify({"data": fileRefs})
     });
-    const content = rawResponse.json();
   
-    console.log(content);
+    console.log(rawResponse);
     
     setPage(1);
   }

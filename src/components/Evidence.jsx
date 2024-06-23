@@ -15,8 +15,7 @@ export const Evidence = ({
     const storage = getStorage();
     const objectRef = ref(storage, storageLink);
 
-    useEffect(() => {
-        getMetadata(objectRef).then((metadata) => {
+    getMetadata(objectRef).then((metadata) => {
             console.log(metadata)
             if (metadata.contentType === "image/png") {
                 setIcon(image);
@@ -32,7 +31,6 @@ export const Evidence = ({
                 setIcon(video);
             }
         });
-    }, [icon, setIcon])
 
     return(<div className="bg-slate-100 p-8 rounded-lg w-80 flex flex-row gap-8">
         <div className="my-auto">

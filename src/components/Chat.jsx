@@ -12,7 +12,7 @@ export const Chat = () => {
         if (event.key === 'Enter') {
           setValue('');
           
-          const response = fetch("http://localhost:5000", {
+          const response = fetch("http://127.0.0.1:5000/chat", {
             method: "POST",
             body: JSON.stringify({
                 message: value

@@ -14,14 +14,16 @@ export const Upload = ({ handleFilesUploaded }) => {
         let fileRefs = [];
 
         for (let file of files) {
-            const fileRef = ref(storage, `test/${file.name}`);
+            const fileRef = ref(storage, `${file.name}`);
             uploadBytes(fileRef, file).then((snapshot) => {
                 console.log(snapshot);
               });
             fileRefs.push(fileRef.fullPath);
         }
-
-        handleFilesUploaded(fileRefs);
+        
+        setTimeout(() => {
+            handleFilesUploaded(fileRefs);
+        }, 5000)
     };
 
     return (<div className="flex-col max-w-[500px] mx-auto pt-20">

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { Evidence } from "./Evidence"
-import { doc } from "@firebase/firestore";
+import { doc, getFirestore, getDoc } from "@firebase/firestore";
 
 /*
 interface exhibit = {
@@ -15,22 +15,16 @@ export const Exhibit = ({ exhibit, app }) => {
 
     const db = getFirestore(app);
 
-
-    useEffect(() => {
-        let parsedEvidences = [];
-
-        exhibit.evidences.forEach(async (ev) => {
-            const docRef = doc(db, "case", ev);
-            const docSnap = await getDoc(docRef);
-
-            parsedEvidences.push({
-                name: docSnap.name,
-                description: docSnap.description
-            })
-        });
-
-        setEvidences(parsedEvidences)
-    })
+    let parsedEvidences = [];
+    exhibit.evidences.forEach(async (ev) => {
+        const docRef = doc(db, "case", ev);
+        const docSnap = await getDoc(docRef);
+        parsedEvidences.push({
+            name: docSnap.name,
+            description: docSnap.description
+        })
+    });
+    setEvidences(parsedEvidences);
 
     const evidenceList = evidences.map((ev, index) => {
         return (<Evidence key={index} name={ev.name} description={ev.description} storageLink={ev.storageLink}/>)
