@@ -11,6 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@firebase/firestore": "^4.6.3",
     "@firebase/storage": "^0.12.5",
     "dotenv": "^16.4.5",
     "firebase": "^10.12.2",
