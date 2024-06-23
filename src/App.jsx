@@ -4,8 +4,11 @@ import { Upload } from './Upload'
 import { Header } from './components/Header'
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
+import { CaseOverview } from './CaseOverview';
 
 function App() {
+  const [page, setPage] = useState(1);
+
   const firebaseConfig = {
     apiKey: import.meta.env.VITE_API_KEY,
     authDomain: import.meta.env.VITE_AUTH_DOMAIN,
@@ -24,12 +27,16 @@ function App() {
 
   const handleFilesUploaded = (fileRefs) => {
     // Post to api
+    
+    setPage(1);
   }
+
+  const pages = [<Upload handleFilesUploaded={handleFilesUploaded}/>, <CaseOverview />];
 
   return (
       <>
        <Header/>
-       <Upload handleFilesUploaded={handleFilesUploaded} />
+       { pages[page] }
       </>
     )
   }

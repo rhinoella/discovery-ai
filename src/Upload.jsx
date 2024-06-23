@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { FileUploader } from "react-drag-drop-files";
-import { getStorage, ref } from "firebase/storage";
+import { getStorage, ref, uploadBytes } from "firebase/storage";
 
 
 const fileTypes = ["JPG", "PNG", "MP3", "MP4", "PDF"];
@@ -14,9 +14,12 @@ export const Upload = ({ handleFilesUploaded }) => {
         let fileRefs = [];
 
         for (let file of files) {
-            fileRef = ref(storage, `${file.name}`);
+            const fileRef = ref(storage, `test/${file.name}`);
+            uploadBytes(fileRef, file).then((snapshot) => {
+                console.log(snapshot);
+              });
+            console.log(fileRef);
             fileRefs.push(fileRef);
-
         }
 
         handleFilesUploaded(fileRefs);
