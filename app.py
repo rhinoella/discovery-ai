@@ -35,13 +35,21 @@ app = Flask(__name__)
 
 @app.route("/chat", methods=["POST"])
 def chat():
+    message = ""
     if request.is_json:
         data = request.get_json()
         message = data.get('message', [])
     else:
         message = request.form.get("message")
 
-    
+    allData = []
+
+    completion = openAIClient.chat.completions.create(model="gpt-4o", messages=[{"role": "system", "content": "Here is a list of all the evidence and technical analysis of it. Be able to answer any of the data and answer like a lawyer. Evidence: " + allData}, {"role": "user", "content": [
+        {"type": "text", "text": message}
+     ],
+    }])
+
+    return completion.choices[0].message.content
 
 
 @app.route("/discovery", methods=["POST"])
@@ -63,24 +71,24 @@ def discovery(data):
     allData = []
     for oneData in data:
         if (".png" in oneData):
-            text = understandImage(oneData)
-            db.collection("case").document(oneData).set({"type": "image", "analysis": text})
+            text, name = understandImage(oneData)
+            db.collection("case").document(oneData).set({"type": "image", "description": "Analysis: " + text, "name": name})
             allData.append({oneData: "Evidence Analysis: " + text})
 
         elif (".mp3" in oneData):
-            transcription, analysis = understandAudio(oneData)
-            db.collection("case").document(oneData).set({"type": "audio", "transcription": transcription, "analysis": analysis})
+            transcription, analysis, name = understandAudio(oneData)
+            db.collection("case").document(oneData).set({"type": "audio", "description": "Transcription: " + transcription + ", Analysis: " + analysis, "name": name})
             allData.append({oneData: "Evidence Transcription: " + transcription + ", Analysis: " + analysis})
 
         elif (".mp4" in oneData):
-            text = understandVideo(oneData)
-            db.collection("case").document(oneData).set({"type": "video", "analysis": text})
+            text, name = understandVideo(oneData)
+            db.collection("case").document(oneData).set({"type": "video", "description": "Analysis: " + text, "name": name})
             allData.append({oneData: "Evidence Analysis: " + text})
 
 
         elif (".pdf" in oneData):
-            text, analysis = understandPDF(oneData)
-            db.collection("case").document(oneData).set({"type": "pdf", "transcription": text, "analysis": analysis})
+            text, analysis, name = understandPDF(oneData)
+            db.collection("case").document(oneData).set({"type": "pdf", "description": "Transcription: " + text + ", Analysis: " + analysis, "name": name})
             allData.append({oneData: "Evidence Transcription: " + text})
     
     
@@ -93,7 +101,19 @@ def discovery(data):
     allExhibits = allExhibits.split(";")
     alphabet = "abcdefghijklmnopqrstuvwxyz"
     for oneExhibit in range(len(allExhibits)):
-        db.collection("exhibits").document(alphabet[oneExhibit].upper()).set({"data": allExhibits[oneExhibit].split(",")})
+        data = allExhibits[oneExhibit].split(",")
+
+        allEvidenceText = ""
+
+        for one in data:
+            allEvidenceText += allData[one]
+        completion = openAIClient.chat.completions.create(model="gpt-4o", messages=[{"role": "system", "content": "You are an amazing detective that is great at piecing together several evidences to create exhibits. Given this exhibit you generated, give me a summary of it and why it is relevant to the case."}, {"role": "user", "content": [
+            {"type": "text", "text": "Here is all the evidences from this exhibit: " + allEvidenceText}
+    ],
+}])
+
+        exhibitSumary = (completion.choices[0].message.content)
+        db.collection("exhibits").document(alphabet[oneExhibit].upper()).set({"data": data, "summary": exhibitSumary})
 
 
 
@@ -112,8 +132,11 @@ def understandAudio(uri):
         {"type": "text", "text": f"The audio transcription is: {audio.text}"}
      ],
     }])
-
-    return audio.text, completion.choices[0].message.content 
+    completionName = openAIClient.chat.completions.create(model="gpt-4o", messages=[{"role": "system", "content": "You are an amazing detective that is great at understanding audio transcriptions and analyzing them for evidence."}, {"role": "user", "content": [
+        {"type": "text", "text": f"Give me a good name for this audio transcription: {audio.text}"}
+     ],
+    }])
+    return audio.text, completion.choices[0].message.content, completionName.choices[0].message.content 
 
 
 def understandPDF(uri):
@@ -173,8 +196,9 @@ def analyzeFrames(frames):
         allFrameContent.append({"type": "image_url", "image_url": {"url": f"data:image/png;base64," + oneFrame}})
     
     completion = openAIClient.chat.completions.create(model="gpt-4o", messages=[{"role": "system", "content": "You are an investigative detective that is amazing at giving accurate descriptions by understanding videos given frames of it. Provide me two sentences of evidence that can be used in court. The first section give me a description of what I'm watching. The second section give me an analysis of what is happening in the eyes of an detective." }, {"role": "user", "content": allFrameContent}])
+    completionName = openAIClient.chat.completions.create(model="gpt-4o", messages=[{"role": "system", "content": "You are an investigative detective that is amazing at giving accurate descriptions by understanding of videos. Given this summary of the video please think of a name for it." }, {"role": "user", "content": "Here is the summary of the video. Please think of a name for it. Summary: " + completion.choices[0].message.content }])
 
-    return completion.choices[0].message.content 
+    return completion.choices[0].message.content, completionName.choices[0].message.content 
 
 def understandImage(uri):
     tempFileURI = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
@@ -184,11 +208,14 @@ def understandImage(uri):
     blobURI.download_to_filename(tempFileURI.name)
     with open(tempFileURI.name, "rb") as imageFile:
         encodedImage = base64.b64encode(imageFile.read()).decode('utf-8')
-        allFrameContent = [{"type": "text", "text": "You are an investigative detective. Please look throguh these images and analyze them."}, {"type": "image_url", "image_url": {"url": f"data:image/png;base64," + encodedImage}}]
+        allFrameContent = [{"type": "text", "text": "You are an investigative detective. Please look through these images and analyze them."}, {"type": "image_url", "image_url": {"url": f"data:image/png;base64," + encodedImage}}]
 
         completion = openAIClient.chat.completions.create(model="gpt-4o", messages=[{"role": "system", "content": "You are an investigative detective that is amazing at giving accurate descriptions by understanding of images. Provide me two sentences of evidence that can be used in court. The first section give me a description of what I'm looking at. The second section give me an analysis of what is happening in the eyes of an detective." }, {"role": "user", "content": allFrameContent}])
 
-        return completion.choices[0].message.content 
+        completionName = openAIClient.chat.completions.create(model="gpt-4o", messages=[{"role": "system", "content": "You are an investigative detective that is amazing at giving accurate descriptions by understanding of images. Given this summary of the image please think of a name for it." }, {"role": "user", "content": "Here is the summary of the image. Please think of a name for it. Summary: " + completion.choices[0].message.content }])
+
+
+        return completion.choices[0].message.content, completionName.choices[0].message.content
 
 def understandVideo(uri):
     tempFileURI = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False)
@@ -208,9 +235,17 @@ def askGPT(question):
     ),
     ("human", question),
     ]
-    return llm.invoke(messageHistory).content
     
-
-
+    explain = llm.invoke(messageHistory).content
+    
+    nameMessageHistory = [
+    (
+        "system",
+        "You are a legal professional and a lawyer that is fully versed in the language of law. Please give me a name for this pdf given the summary of it: " + explain,
+    ),
+    ("human", question),
+    ]
+    name = llm.invoke(nameMessageHistory).content
+    return explain, name
 
 app.run(host="localhost")
