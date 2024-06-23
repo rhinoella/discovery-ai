@@ -7,7 +7,7 @@ import { getAnalytics } from "firebase/analytics";
 import { CaseOverview } from './CaseOverview';
 
 function App() {
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(0);
 
   const firebaseConfig = {
     apiKey: "AIzaSyArwh6KL3piK85hOWkT7RvYK4iSkUAl8K8",
