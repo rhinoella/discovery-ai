@@ -12,14 +12,17 @@ export const Chat = () => {
         if (event.key === 'Enter') {
           setValue('');
           
-          const response = fetch("http://127.0.0.1:5000/chat", {
+          const gptResponse = await fetch("http://127.0.0.1:5000/chat", {
             method: "POST",
             body: JSON.stringify({
                 message: value
             })
           });
 
-          setResponse(response);
+          const responseData = await response.json()
+          console.log(responseData);
+
+          setResponse(responseData);
           handleSubmit(value);
         }
     };

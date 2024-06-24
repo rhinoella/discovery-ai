@@ -12,26 +12,28 @@ export const Evidence = ({
     type
 }) => {
     const [icon, setIcon] = useState(file);
+    
+    console.log(type)
 
     useEffect(() => {              
-        if (type === "image") {
+        if (type == "image") {
             setIcon(image);
         }
-        else if (type === "pdf")
+        else if (type == "pdf")
         {
             setIcon(file);
         }
-        else if (type === "audio") {
+        else if (type == "audio") {
             setIcon(audio);
         }
-        else if (type === "video") {
+        else if (type == "video") {
             setIcon(video);
         }
-    }, []);
+    });
 
-    return(<div className="bg-slate-100 p-8 rounded-lg w-80 flex flex-row gap-8">
+    return(<div className="bg-slate-100 p-8 rounded-lg w-full flex flex-row gap-8">
         <div className="my-auto">
-            <img src={icon} width={60}></img>
+            <img src={icon} width={150}></img>
         </div>
         <div>
         <h3 className="font-medium text-slate-700">{name}</h3>

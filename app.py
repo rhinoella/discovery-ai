@@ -20,13 +20,14 @@ from openai import OpenAI
 from flask_cors import CORS
 
 
-client = create_client("https://htbkghbygiyuncrzxkhq.supabase.co", "..")
-openAIEmbeddings = OpenAIEmbeddings(api_key="")
-llm = ChatOpenAI(model="gpt-4o", api_key="")
+client = create_client("https://htbkghbygiyuncrzxkhq.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh0YmtnaGJ5Z2l5dW5jcnp4a2hxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTkxMzYxNzIsImV4cCI6MjAzNDcxMjE3Mn0.2mEHWNDnAVEYEUUEE3fYKs-tDnG_zPEYK0tXIEXGdgE")
+openAIEmbeddings = OpenAIEmbeddings(api_key="sk-proj-U2u0ZwlySYaW8EhBcoyUT3BlbkFJsr7qJNd0Ok7sy4NQza17")
+llm = ChatOpenAI(model="gpt-4o", api_key="sk-proj-U2u0ZwlySYaW8EhBcoyUT3BlbkFJsr7qJNd0Ok7sy4NQza17")
 vectorStore = SupabaseVectorStore(client, openAIEmbeddings, "documents")
-cred = credentials.Certificate("")
-firebase_admin.initialize_app(cred, {"storageBucket": ""})
-openAIClient = OpenAI(api_key="")
+cred = credentials.Certificate("discovery-ai-8a80a-firebase-adminsdk-31es3-cb4df16eb9.json")
+firebase_admin.initialize_app(cred, {"storageBucket": "discovery-ai-8a80a.appspot.com"})
+openAIClient = OpenAI(api_key="sk-proj-U2u0ZwlySYaW8EhBcoyUT3BlbkFJsr7qJNd0Ok7sy4NQza17")
+allData = {}
 
 db = firestore.client()
 
@@ -44,9 +45,9 @@ def chat():
     else:
         message = request.form.get("message")
 
-    allData = []
-
-    completion = openAIClient.chat.completions.create(model="gpt-4o", messages=[{"role": "system", "content": "Here is a list of all the evidence and technical analysis of it. Be able to answer any of the data and answer like a lawyer. Evidence: " + allData}, {"role": "user", "content": [
+    print(allData)
+    print(message)
+    completion = openAIClient.chat.completions.create(model="gpt-4o", messages=[{"role": "system", "content": "Here is a list of all the evidence and technical analysis of it. Be able to answer any of the data and answer like a lawyer. Evidence: " + str(allData)}, {"role": "user", "content": [
         {"type": "text", "text": message}
      ],
     }])
@@ -71,33 +72,32 @@ def discover():
 
 
 def discovery(data):
-    allData = {}
     for oneData in data:
         if (".png" in oneData):
             text, name = understandImage(oneData)
             # oneData = oneData.split(".")[0]
             print(oneData)
             print(name)
-            db.collection("case").document(oneData).set({"type": "image", "description": ("Analysis: " + text), "name": name})
+            db.collection("case").document(oneData).set({"type": "image", "description": (text), "name": name})
             allData[oneData] = "Evidence Analysis: " + text
 
         elif (".mp3" in oneData):
             transcription, analysis, name = understandAudio(oneData)
             # oneData = oneData.split(".")[0]
-            db.collection("case").document(oneData).set({"type": "audio", "description": ("Transcription: " + transcription + ", Analysis: " + analysis), "name": name})
+            db.collection("case").document(oneData).set({"type": "audio", "description": (analysis), "name": name})
             allData[oneData] =  "Evidence Transcription: " + transcription + ", Analysis: " + analysis
 
         elif (".mp4" in oneData):
             text, name = understandVideo(oneData)
             # oneData = oneData.split(".")[0]
-            db.collection("case").document(oneData).set({"type": "video", "description": ("Analysis: " + text), "name": name})
+            db.collection("case").document(oneData).set({"type": "video", "description": (text), "name": name})
             allData[oneData] = "Evidence Analysis: " + text
 
 
         elif (".pdf" in oneData):
             text, analysis, name = understandPDF(oneData)
             # oneData = oneData.split(".")[0]
-            db.collection("case").document(oneData).set({"type": "pdf", "description": ("Transcription: " + text + ", Analysis: " + analysis), "name": name})
+            db.collection("case").document(oneData).set({"type": "pdf", "description": (analysis), "name": name})
             allData[oneData] = "Evidence Transcription: " + text
     
     
@@ -120,7 +120,7 @@ def discovery(data):
 
         for one in data:
             allEvidenceText += allData.get(one)
-        completion = openAIClient.chat.completions.create(model="gpt-4o", messages=[{"role": "system", "content": "You are an amazing detective that is great at piecing together several evidences to create exhibits. Given this exhibit you generated, give me a 2 sentence summary of it and why it is relevant to the case."}, {"role": "user", "content": [
+        completion = openAIClient.chat.completions.create(model="gpt-4o", messages=[{"role": "system", "content": "Don't output markdown. You are an amazing detective that is great at piecing together several evidences to create exhibits. Given this exhibit you generated, give me an only 2 sentence summary of it and why it is relevant to the case."}, {"role": "user", "content": [
             {"type": "text", "text": "Here is all the evidences from this exhibit: " + allEvidenceText}
     ],
 }])
@@ -141,7 +141,7 @@ def understandAudio(uri):
     audio = openAIClient.audio.transcriptions.create(
     model="whisper-1",
     file=open(tempFileURI.name, "rb"))
-    completion = openAIClient.chat.completions.create(model="gpt-4o", messages=[{"role": "system", "content": "You are an amazing detective that is great at understanding audio transcriptions and analyzing them for evidence. Summarize these transcriptions and find important details that can be used in cour in 2 sentences."}, {"role": "user", "content": [
+    completion = openAIClient.chat.completions.create(model="gpt-4o", messages=[{"role": "system", "content": "Don't output markdown. You are an amazing detective that is great at understanding audio transcriptions and analyzing them for evidence. Summarize these transcriptions and find important details that can be used in court in only 2 sentences."}, {"role": "user", "content": [
         {"type": "text", "text": f"The audio transcription is: {audio.text}"}
      ],
     }])
@@ -203,12 +203,12 @@ def extractFrames(video_path):
     return encoded_frames
 
 def analyzeFrames(frames):
-    allFrameContent = [{"type": "text", "text": "The following images are frames in the video. Analyze them as a whole and let me know what the video is about."}]
+    allFrameContent = [{"type": "text", "text": "The following images are frames in the video. Don't output markdown. Analyze them as a whole and let me know what the video is about."}]
 
     for oneFrame in frames:
         allFrameContent.append({"type": "image_url", "image_url": {"url": f"data:image/png;base64," + oneFrame}})
     
-    completion = openAIClient.chat.completions.create(model="gpt-4o", messages=[{"role": "system", "content": "You are an investigative detective that is amazing at giving accurate descriptions by understanding videos given frames of it. Provide me two sentences of evidence that can be used in court. The first section give me a description of what I'm watching. The second section give me an analysis of what is happening in the eyes of an detective." }, {"role": "user", "content": allFrameContent}])
+    completion = openAIClient.chat.completions.create(model="gpt-4o", messages=[{"role": "system", "content": "You are an investigative detective that is amazing at giving accurate descriptions by understanding videos given frames of it. Provide me with only two sentences of evidence that can be used in court. The first section give me a description of what I'm watching. The second section give me an analysis of what is happening in the eyes of an detective." }, {"role": "user", "content": allFrameContent}])
     completionName = openAIClient.chat.completions.create(model="gpt-4o", messages=[{"role": "system", "content": "You are an investigative detective that is amazing at giving accurate descriptions by understanding of videos. Given this summary of the video please think of a name for it." }, {"role": "user", "content": "Here is the summary of the video. Please think of a name for it. Summary: " + completion.choices[0].message.content }])
 
     return completion.choices[0].message.content, completionName.choices[0].message.content 
@@ -221,9 +221,9 @@ def understandImage(uri):
     blobURI.download_to_filename(tempFileURI.name)
     with open(tempFileURI.name, "rb") as imageFile:
         encodedImage = base64.b64encode(imageFile.read()).decode('utf-8')
-        allFrameContent = [{"type": "text", "text": "You are an investigative detective. Please look through these images and analyze them."}, {"type": "image_url", "image_url": {"url": f"data:image/png;base64," + encodedImage}}]
+        allFrameContent = [{"type": "text", "text": "You are an investigative detective. Don't output markdown. Please look through these images and analyze them."}, {"type": "image_url", "image_url": {"url": f"data:image/png;base64," + encodedImage}}]
 
-        completion = openAIClient.chat.completions.create(model="gpt-4o", messages=[{"role": "system", "content": "You are an investigative detective that is amazing at giving accurate descriptions by understanding of images. Provide me two sentences of evidence that can be used in court. The first section give me a description of what I'm looking at. The second section give me an analysis of what is happening in the eyes of an detective." }, {"role": "user", "content": allFrameContent}])
+        completion = openAIClient.chat.completions.create(model="gpt-4o", messages=[{"role": "system", "content": "You are an investigative detective that is amazing at giving accurate descriptions by understanding of images. Provide me with only two sentences of evidence that can be used in court. The first section give me a description of what I'm looking at. The second section give me an analysis of what is happening in the eyes of an detective." }, {"role": "user", "content": allFrameContent}])
 
         completionName = openAIClient.chat.completions.create(model="gpt-4o", messages=[{"role": "system", "content": "You are an investigative detective that is amazing at giving accurate descriptions by understanding of images. Given this summary of the image please think of a name for it." }, {"role": "user", "content": "Here is the summary of the image. Please think of a name for it. Summary: " + completion.choices[0].message.content }])
 
